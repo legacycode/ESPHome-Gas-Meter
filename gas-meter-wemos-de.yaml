@@ -1,0 +1,286 @@
+# ============================================================================
+# Wemos D1 Mini - Gaszähler mit Reed-Kontakt
+# ============================================================================
+# Konfiguration zum Auslesen eines Gaszählers mittels Reed-Kontakt-Sensor
+# Reed-Kontakt verbunden mit D2 (GPIO4) und GND
+
+# Substitutionen: Variablen, die in dieser Konfiguration wiederverwendet werden können
+substitutions:
+  # Der interne Name, der von ESPHome verwendet wird (klein, ohne Leerzeichen, Bindestriche OK)
+  devicename: "gas-meter"
+
+  # Der Anzeigename in Home Assistant (ohne Umlaute für MQTT-Kompatibilität)
+  friendly_name: "Gaszaehler"
+
+  # Beschreibung, was dieses Gerät macht
+  device_comment: "Gaszaehler-Ausleser mit Reed-Kontakt"
+
+  # Wie viele Impulse einem Kubikmeter Gas entsprechen (an Ihren Zähler anpassen)
+  # Übliche Werte: 1, 10, 100, 1000
+  # Prüfen Sie die Spezifikation Ihres Gaszählers
+  # Dieser Zähler: 0,01m³ pro Impuls = 100 Impulse pro m³
+  pulses_per_cubic_meter: "100"
+
+  # Anfangszählerstand-Offset in m³
+  # Setzen Sie dies auf Ihren aktuellen Gaszählerstand (z.B. 1234, wenn Ihr Zähler 1234m³ anzeigt)
+  # Dieser Wert kann jederzeit über Home Assistant angepasst werden
+  initial_meter_offset: "0"
+
+# ============================================================================
+# Haupt-ESPHome-Konfiguration
+# ============================================================================
+esphome:
+  name: ${devicename}
+  friendly_name: ${friendly_name}
+  comment: ${device_comment}
+  name_add_mac_suffix: false
+  # Impulszählung beim Neustart wiederherstellen
+  on_boot:
+    priority: -100
+    then:
+      - pulse_meter.set_total_pulses:
+          id: gas_pulse_meter
+          value: !lambda 'return id(total_pulses_global);'
+
+# ============================================================================
+# ESP8266 Hardware-Konfiguration
+# ============================================================================
+esp8266:
+  board: d1_mini
+
+# ============================================================================
+# Logger - Serielle Ausgabe zur Fehlersuche
+# ============================================================================
+logger:
+  # ESP8266 verwendet traditionelle UART, Standard-Baudrate
+  baud_rate: 115200
+  level: DEBUG
+
+# ============================================================================
+# Home Assistant API - Kommunikation mit Home Assistant
+# ============================================================================
+api:
+  encryption:
+    key: !secret encryption_key
+
+# ============================================================================
+# MQTT - Daten an MQTT-Broker senden
+# ============================================================================
+mqtt:
+  broker: mqtt.home
+  # Home Assistant Discovery über MQTT deaktivieren, um Konflikte mit API zu vermeiden
+  discovery: false
+  # Optional: Topic-Präfix für alle MQTT-Nachrichten setzen
+  topic_prefix: esphome/gas-meter
+
+# ============================================================================
+# OTA-Updates - Firmware über WiFi aktualisieren
+# ============================================================================
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+# ============================================================================
+# Einstellungen - Daten im Flash-Speicher sichern
+# ============================================================================
+# Dadurch werden Sensorwerte gesichert und nach einem Neustart wiederhergestellt
+preferences:
+  flash_write_interval: 1min
+
+# ============================================================================
+# Globale Variablen - Persistente Variablen
+# ============================================================================
+# Diese globale Variable speichert die gesamte Impulszahl und überlebt Neustarts
+globals:
+  - id: total_pulses_global
+    type: int
+    restore_value: true
+    initial_value: '0'
+
+  # Zählerstand-Offset in m³ (zum Starten bei vorhandenem Zählerwert)
+  - id: meter_offset
+    type: float
+    restore_value: true
+    initial_value: '${initial_meter_offset}'
+
+# ============================================================================
+# WiFi-Konfiguration
+# ============================================================================
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Ausweich-Access-Point
+  ap:
+    ssid: "${friendly_name} Fallback"
+    password: !secret ap_password
+    ap_timeout: 15s
+
+# ============================================================================
+# Webserver - Gerät über Webbrowser steuern
+# ============================================================================
+web_server:
+  port: 80
+
+# ============================================================================
+# Zeit - Uhr mit Home Assistant synchronisieren
+# ============================================================================
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+# ============================================================================
+# Captive Portal - Einfache WiFi-Einrichtung
+# ============================================================================
+captive_portal:
+
+# ============================================================================
+# Interne LED - Statusanzeige
+# ============================================================================
+# Wemos D1 Mini hat interne blaue LED auf GPIO2 (D4)
+output:
+  - platform: gpio
+    pin: GPIO2
+    inverted: true
+    id: internal_led
+
+light:
+  - platform: binary
+    output: internal_led
+    id: led
+    name: "${friendly_name} LED"
+    restore_mode: RESTORE_DEFAULT_OFF
+
+# ============================================================================
+# Binärsensoren - Ein/Aus-Sensoren
+# ============================================================================
+binary_sensor:
+  # Status-Sensor - Zeigt an, ob das Gerät online oder offline ist
+  - platform: status
+    name: "${friendly_name} Status"
+
+# ============================================================================
+# Sensoren - Numerische Sensoren
+# ============================================================================
+sensor:
+  # Impulszähler - Zählt Impulse und berechnet Durchflussrate
+  - platform: pulse_meter
+    id: gas_pulse_meter
+    name: "${friendly_name} Durchflussrate"
+    # Verbindung zum Reed-Kontakt-Pin D2 (GPIO4)
+    pin:
+      number: GPIO4
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    # Maßeinheit
+    unit_of_measurement: "m³/h"
+    accuracy_decimals: 2
+    icon: "mdi:fire"
+    # Timeout: Wenn 2 Minuten kein Impuls, nehme an Durchfluss = 0
+    timeout: 2min
+    # Interner Filtermodus: PULSE zählt vollständige Impulszyklen (schließen + öffnen = 1 Impuls)
+    # EDGE würde schließen UND öffnen als 2 separate Impulse zählen (falsch)
+    internal_filter_mode: PULSE
+    # Interner Filter: Impulse ignorieren, die näher als 100ms liegen (Entprellung)
+    internal_filter: 100ms
+    # Filter
+    filters:
+      # Jeder Impuls entspricht 1/pulses_per_cubic_meter Kubikmeter
+      # Mit 60 multiplizieren, um von m³/min in m³/h umzurechnen
+      - multiply: !lambda "return 60.0 / ${pulses_per_cubic_meter};"
+    # Visuelles Feedback: LED leuchtet für 3 Sekunden
+    on_raw_value:
+      then:
+        # Globalen Impulszähler zur Persistierung aktualisieren
+        - lambda: |-
+            id(total_pulses_global) += 1;
+        # LED-Feedback - einfaches Ein/Aus für interne LED
+        - light.turn_on: led
+        # LED bleibt für 3 Sekunden an
+        - delay: 3s
+        - light.turn_off: led
+    # Gesamtzähler - verfolgt gesamten Gasverbrauch
+    total:
+      name: "${friendly_name} Gesamt"
+      id: pulse_meter_total
+      unit_of_measurement: "m³"
+      accuracy_decimals: 2
+      icon: "mdi:counter"
+      # Zustandsklasse teilt Home Assistant mit, dass dies ein kumulativer Wert ist
+      state_class: total_increasing
+      # Geräteklasse für Gasverbrauch
+      device_class: gas
+      # Impulse in Kubikmeter umrechnen
+      filters:
+        - multiply: !lambda "return 1.0 / ${pulses_per_cubic_meter};"
+
+  # Gesamtimpulse - Rohe Impulszahl (ohne Umrechnung in m³)
+  - platform: copy
+    source_id: pulse_meter_total
+    name: "${friendly_name} Gesamtimpulse"
+    unit_of_measurement: "Impulse"
+    accuracy_decimals: 0
+    icon: "mdi:counter"
+    filters:
+      # Zurück multiplizieren, um rohe Impulse zu erhalten
+      - multiply: ${pulses_per_cubic_meter}
+
+  # WiFi-Signalstärke
+  - platform: wifi_signal
+    name: "${friendly_name} WiFi-Signal"
+    update_interval: 60s
+
+  # Betriebszeit-Sensor
+  - platform: uptime
+    name: "${friendly_name} Betriebszeit"
+    update_interval: 60s
+
+  # Tatsächlicher Zählerstand - Kombiniert gemessenen Verbrauch mit Offset
+  - platform: template
+    name: "${friendly_name} Zaehlerstand"
+    id: actual_meter_reading
+    unit_of_measurement: "m³"
+    accuracy_decimals: 2
+    icon: "mdi:counter"
+    state_class: total_increasing
+    device_class: gas
+    # Berechnung: Offset + gemessener Verbrauch
+    lambda: |-
+      return id(meter_offset) + id(pulse_meter_total).state;
+    update_interval: 10s
+
+# ============================================================================
+# Button - Ausführbare Aktionen
+# ============================================================================
+button:
+  # Reset pulse counter - Sets measured consumption back to zero
+  - platform: template
+    name: "${friendly_name} Impulse zuruecksetzen"
+    icon: "mdi:restart"
+    on_press:
+      - lambda: |-
+          id(total_pulses_global) = 0;
+          id(gas_pulse_meter).set_total_pulses(0);
+
+# ============================================================================
+# Number - Einstellbare numerische Werte
+# ============================================================================
+number:
+  # Zählerstand-Offset - Hier den tatsächlichen Zählerstand einstellen
+  - platform: template
+    name: "${friendly_name} Zaehlerstand-Offset"
+    id: meter_offset_number
+    min_value: 0
+    max_value: 999999
+    step: 0.01
+    unit_of_measurement: "m³"
+    icon: "mdi:counter"
+    # Aktuellen Wert aus globaler Variable lesen
+    lambda: |-
+      return id(meter_offset);
+    # Wenn Benutzer den Wert ändert, globale Variable aktualisieren
+    set_action:
+      - lambda: |-
+          id(meter_offset) = x;

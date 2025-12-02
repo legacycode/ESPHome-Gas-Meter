@@ -1,0 +1,49 @@
+name: Build ESPHome firmware
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config:
+          - gas-meter-wemos-en.yaml
+          - gas-meter-wemos-de.yaml
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install ESPHome
+        run: |
+          pip install esphome
+
+      - name: Create secrets.yaml from template
+        run: |
+          cp secrets.yaml.example secrets.yaml
+          sed -i 's/YOUR_32_BYTE_BASE64_KEY=/507p6qLb8\/L+lDfZb2HdvKzaDyAj28C\/Q0NMyffw3LQ=/g' secrets.yaml
+
+      - name: Build ESPHome firmware
+        run: |
+          esphome compile ${{ matrix.config }}
