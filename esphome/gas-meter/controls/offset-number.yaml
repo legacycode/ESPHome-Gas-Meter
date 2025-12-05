@@ -1,0 +1,23 @@
+# ============================================================================
+# Meter Offset Number Control
+# ============================================================================
+# Adjustable offset for meter reading calibration
+# Uses name substitution: name_meter_offset
+
+number:
+  # Meter Offset - Set your actual meter reading here
+  - platform: template
+    id: meter_offset_number
+    name: "${name_meter_offset}"
+    min_value: 0
+    max_value: 999999
+    step: 0.01
+    unit_of_measurement: "m³"
+    icon: "mdi:counter"
+    # Read current value from global variable
+    lambda: |-
+      return id(meter_offset);
+    # When user changes the value, update global variable
+    set_action:
+      - lambda: |-
+          id(meter_offset) = x;

@@ -1,0 +1,13 @@
+# ============================================================================
+# Gas Meter Boot Configuration
+# ============================================================================
+# Restores the pulse counter from flash memory on boot
+# This ensures pulse counts survive reboots and power outages
+
+esphome:
+  on_boot:
+    priority: -100
+    then:
+      - pulse_meter.set_total_pulses:
+          id: gas_pulse_meter
+          value: !lambda 'return id(total_pulses_global);'

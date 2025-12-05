@@ -7,6 +7,9 @@ reed contact sensor with a Wemos D1 Mini (ESP8266). It enables real-time
 monitoring of gas consumption and integrates seamlessly with Home Assistant's
 Energy Dashboard.
 
+The project uses a **modular package-based structure** for better maintainability
+and reusability.
+
 ## Hardware Setup
 
 ### Components
@@ -37,79 +40,228 @@ Reed Contact Sensor
 ## File Structure
 
 ```text
-esp-home-gas-meter/
-├── .github/
-│   └── workflows/
-│       └── build.yml              # GitHub Actions CI/CD
-├── .esphome/                      # Build artifacts (gitignored)
-├── .claude/                       # Claude Code config (gitignored)
-├── .devcontainer/                 # Dev container config (gitignored)
-├── gas-meter-wemos-en.yaml        # English ESPHome config
-├── gas-meter-wemos-de.yaml        # German ESPHome config
-├── secrets.yaml                   # WiFi/API credentials (gitignored)
-├── secrets.yaml.example           # Template for secrets
-├── .gitignore                     # Git ignore rules
-├── .markdownlint.json             # Markdown linting config
-├── README.md                      # English documentation
-├── README_de.md                   # German documentation
-├── LICENSE                        # MIT License
-└── claude.md                      # This file - project context
+esphome/
+├── common/
+│   ├── boards/
+│   │   └── esp8266-d1-mini.yaml       # Board config with pins & logger
+│   ├── core/
+│   │   ├── api.yaml                    # Home Assistant API (no encryption)
+│   │   ├── esphome.yaml                # Core ESPHome settings
+│   │   ├── preferences.yaml            # Flash storage settings
+│   │   └── wifi.yaml                   # WiFi (no fallback AP)
+│   └── packages.yaml                   # ⭐ Aggregates all common packages
+├── gas-meter/
+│   ├── controls/
+│   │   ├── offset-number.yaml         # Adjustable meter offset
+│   │   └── reset-button.yaml          # Reset pulse counter
+│   ├── core/
+│   │   ├── globals.yaml                # Global variables
+│   │   ├── meter-reading.yaml         # Meter reading with offset
+│   │   └── pulse-meter.yaml           # Pulse meter sensor
+│   ├── sensors/
+│   │   ├── diagnostic.yaml             # WiFi signal, uptime
+│   │   └── status.yaml                 # Binary status sensor
+│   ├── led-internal.yaml               # Internal LED for pulse feedback
+│   └── packages.yaml                   # ⭐ Aggregates all gas-meter packages
+├── localization/
+│   ├── de/
+│   │   └── translations.yaml           # German translations
+│   ├── en/
+│   │   └── translations.yaml           # English translations
+│   ├── de.yaml                         # German wrapper
+│   └── en.yaml                         # English wrapper
+├── gas-meter-wemos.yaml                # Main device configuration
+├── secrets.yaml                        # WiFi credentials (gitignored)
+└── secrets.yaml.example                # Template for secrets
 ```
 
 ## Configuration Files
 
-### ESPHome YAML Structure
+### Main Configuration: gas-meter-wemos.yaml
 
-Both `gas-meter-wemos-en.yaml` and `gas-meter-wemos-de.yaml` have the same
-structure:
+This is the main device configuration that uses aggregated packages for maximum simplicity:
 
-1. **Substitutions**: Variables for customization
-   - `devicename`: Internal device name
-   - `friendly_name`: Display name in Home Assistant
-   - `device_comment`: Description
-   - `pulses_per_cubic_meter`: Meter calibration (default: 100)
-   - `initial_meter_offset`: Starting meter reading
+```yaml
+packages:
+  # Base Configuration (core, board, wifi, api)
+  common:            !include common/packages.yaml
 
-2. **Core Components**:
-   - ESPHome core configuration
-   - ESP8266 board definition
-   - Logger, API, MQTT, OTA, WiFi
+  # Gas Meter Functionality (sensors, controls, LED)
+  gas_meter:         !include gas-meter/packages.yaml
 
-3. **Globals**:
-   - `total_pulses_global`: Persistent pulse counter
-   - `meter_offset`: Persistent meter offset (in m³)
+  # Localization (change to "de.yaml" for German)
+  translations:      !include localization/en.yaml
+```
 
-4. **Sensors**:
-   - **Flow Rate**: Current gas flow (m³/h)
-   - **Total**: Measured consumption (m³)
-   - **Meter Reading**: Total with offset (m³)
-   - **Total Pulses**: Raw pulse count
-   - **WiFi Signal**: Signal strength
-   - **Uptime**: Device uptime
+**Included Features:**
+- ✅ Full gas meter functionality (LED, button, offset, all sensors)
+- ✅ WiFi connection (no fallback AP)
+- ✅ Home Assistant API (no encryption)
+- ✅ Localization support (English/German)
+- ❌ OTA updates (use USB for flashing)
+- ❌ MQTT
+- ❌ Web server
+- ❌ Captive portal
+- ❌ Time/NTP
 
-5. **Controls**:
-   - **Meter Offset** (Number): Adjustable offset
-   - **Reset Pulses** (Button): Reset pulse counter
-   - **LED** (Light): Status indicator
+**Key Substitutions:**
+- `devicename`: Internal device name
+- `friendly_name`: Display name in Home Assistant
+- `pulses_per_cubic_meter`: Meter calibration (default: 100)
+- `initial_meter_offset`: Starting meter reading
 
-### Key Features
+### Remote Configuration: gas-meter-wemos-remote.yaml
+
+This is an alternative configuration that loads all packages directly from GitHub
+instead of requiring local files. Perfect for users who don't want to clone the
+repository.
+
+```yaml
+substitutions:
+  devicename: "gas-meter-remote"
+  friendly_name: "Gas Meter Remote"
+  device_comment: "Gas Meter Reader with Reed Contact"
+  pulses_per_cubic_meter: "100"
+  initial_meter_offset: "0"
+  wifi_ssid_sub: !secret wifi_ssid
+  wifi_password_sub: !secret wifi_password
+
+packages:
+  common:
+    url: https://github.com/legacycode/ESPHome-Gas-Meter
+    file: esphome/common/packages.yaml
+    ref: main
+    refresh: 1d
+
+  board:
+    url: https://github.com/legacycode/ESPHome-Gas-Meter
+    file: esphome/common/boards/esp8266-d1-mini.yaml
+    ref: main
+    refresh: 1d
+
+  gas_meter:
+    url: https://github.com/legacycode/ESPHome-Gas-Meter
+    file: esphome/gas-meter/packages.yaml
+    ref: main
+    refresh: 1d
+
+  translations:
+    url: https://github.com/legacycode/ESPHome-Gas-Meter
+    file: esphome/localization/en.yaml
+    ref: main
+    refresh: 1d
+```
+
+**How It Works:**
+- Downloads all packages from GitHub on first use
+- Caches files locally for 24 hours (`refresh: 1d`)
+- Requires only one config file + secrets.yaml
+- Automatically gets updates from the repository
+- 100% feature parity with local version
+
+**Key Requirements:**
+- All substitutions must be defined BEFORE the packages section
+- Each package needs: `url`, `file`, `ref`, `refresh`
+- Files are referenced relative to repository root
+- Branch can be `main` or any feature branch (e.g., `feature/simplify-to-minimal`)
+
+**Usage:**
+1. Download `gas-meter-wemos-remote.yaml` from repository
+2. Create `secrets.yaml` with WiFi credentials
+3. Adjust substitutions as needed
+4. Flash: `esphome run gas-meter-wemos-remote.yaml`
+
+**Advantages:**
+- ✅ No repository cloning needed
+- ✅ Automatic updates from GitHub
+- ✅ Minimal maintenance
+- ✅ Perfect for quick testing or deployment
+
+### Package Structure
+
+The configuration uses a **two-level package hierarchy** for maximum simplicity:
+
+**Level 1 - Aggregated Packages** (included in `gas-meter-wemos.yaml`):
+
+1. **`common/packages.yaml`** - All base components:
+   - Core: `esphome.yaml`, `preferences.yaml`, `wifi.yaml`, `api.yaml`
+   - Board: `esp8266-d1-mini.yaml`
+
+2. **`gas-meter/packages.yaml`** - All gas meter components:
+   - LED: `led-internal.yaml`
+   - Core: `globals.yaml`, `pulse-meter.yaml`, `meter-reading.yaml`
+   - Sensors: `diagnostic.yaml`, `status.yaml`
+   - Controls: `reset-button.yaml`, `offset-number.yaml`
+
+3. **`localization/en.yaml` or `de.yaml`** - Language translations
+
+**Level 2 - Individual Component Packages** (included in aggregated packages):
+
+See the `common/packages.yaml` and `gas-meter/packages.yaml` files for the complete
+list of individual components. This two-level approach keeps the main configuration
+extremely clean while maintaining full modularity
+
+### Globals
+
+Two global variables ensure persistence:
+
+- `total_pulses_global`: Integer pulse count (survives reboots)
+- `meter_offset`: Float meter offset in m³ (survives reboots)
+
+### Sensors
+
+**Primary Sensors:**
+- **Flow Rate** (`pulse_meter`): Current gas flow in m³/h
+- **Total** (`pulse_meter.total`): Total consumption in m³
+- **Meter Reading** (`template`): Total + Offset for Energy Dashboard
+
+**Diagnostic Sensors:**
+- **Total Pulses**: Raw pulse count
+- **WiFi Signal**: Signal strength in dB
+- **Uptime**: Device uptime in seconds
+
+**Status Sensors:**
+- **Status**: Online/offline binary sensor
+
+### Controls
+
+**Button:**
+- **Reset Pulses**: Resets pulse counter to zero
+
+**Number:**
+- **Meter Offset**: Adjustable offset for calibration (0-999999 m³)
+
+### LED Feedback
+
+The internal LED provides visual confirmation:
+- Turns ON when pulse detected
+- Stays ON for 3 seconds
+- Turns OFF automatically
+
+## Key Features
 
 - **Persistent Storage**: Pulse count and offset survive reboots
 - **LED Feedback**: Flashes for 3 seconds on each pulse
 - **Debouncing**: 100ms internal filter prevents false triggers
 - **Timeout**: 2-minute timeout sets flow to zero if no pulses
-- **Dual Protocol**: Both Home Assistant API and MQTT support
+- **Modular Design**: Easy to add/remove features via packages
+- **Dual Language Support**: English and German localizations
 
-## MQTT vs. German Naming
+## Localization
 
-The German configuration (`gas-meter-wemos-de.yaml`) uses "ae", "oe", "ue"
-instead of umlauts (ä, ö, ü) for MQTT compatibility:
+The project supports both English and German:
 
-- `Gaszaehler` instead of `Gaszähler`
-- `Zaehlerstand` instead of `Zählerstand`
-- `zuruecksetzen` instead of `zurücksetzen`
+**To change language**, edit line 47 in `gas-meter-wemos.yaml`:
 
-This ensures proper display in MQTT topics and avoids UTF-8 encoding issues.
+```yaml
+# English (default)
+translations: !include localization/en.yaml
+
+# German
+translations: !include localization/de.yaml
+```
+
+**German naming** uses "ae", "oe", "ue" instead of umlauts for MQTT compatibility.
 
 ## Home Assistant Integration
 
@@ -121,7 +273,6 @@ The main sensor for the Energy Dashboard is:
 - **German**: `sensor.gaszaehler_zaehlerstand`
 
 This sensor has:
-
 - `state_class: total_increasing`
 - `device_class: gas`
 - Includes the meter offset for accurate readings
@@ -130,50 +281,24 @@ This sensor has:
 
 1. Compare Home Assistant reading with physical meter
 2. Calculate difference: `physical - sensor`
-3. Adjust "Meter Offset" by adding the difference
+3. Adjust "Meter Offset" in Home Assistant by adding the difference
 4. The "Meter Reading" now matches the physical meter
 
 Example:
-
 - Physical meter: 1456 m³
 - Sensor reading: 1450 m³
 - Difference: +6 m³
 - Current offset: 1234 m³
-- New offset: 1234 + 6 = **1240 m³**
+- New offset: **1240 m³**
 
-## GitHub Actions CI/CD
+## Secrets Management
 
-The workflow (`.github/workflows/build.yml`) automatically:
+`secrets.yaml` contains only WiFi credentials:
 
-1. Builds both English and German configurations
-2. Validates ESPHome syntax
-3. Creates firmware artifacts (.bin and .elf files)
-4. Uploads artifacts (30-day retention)
-
-Triggers:
-
-- Push to main/master branch
-- Pull requests
-- Manual workflow dispatch
-
-## Development Notes
-
-### Markdownlint Configuration
-
-`.markdownlint.json` allows:
-
-- Line length up to 120 characters (excludes tables and code blocks)
-- Inline HTML for language switcher (`<div>`, `<a>`)
-
-### Secrets Management
-
-`secrets.yaml` is gitignored and contains:
-
-- `wifi_ssid`: WiFi network name
-- `wifi_password`: WiFi password
-- `ap_password`: Fallback AP password
-- `encryption_key`: 32-character API encryption key
-- `ota_password`: OTA update password
+```yaml
+wifi_ssid: "YOUR_WIFI_SSID"
+wifi_password: "YOUR_WIFI_PASSWORD"
+```
 
 Use `secrets.yaml.example` as a template.
 
@@ -188,6 +313,34 @@ Use `secrets.yaml.example` as a template.
 
 Check your gas meter specification plate for the correct value.
 
+## Build and Flash
+
+### First Flash (USB)
+
+```bash
+esphome run esphome/gas-meter-wemos.yaml
+```
+
+### Validation Only
+
+```bash
+esphome config esphome/gas-meter-wemos.yaml
+```
+
+### Compilation Only
+
+```bash
+esphome compile esphome/gas-meter-wemos.yaml
+```
+
+## GitHub Actions CI/CD
+
+The workflow (`.github/workflows/build.yml`) automatically:
+
+1. Builds the configuration
+2. Validates ESPHome syntax
+3. Runs on push to main branch or pull requests
+
 ## Troubleshooting
 
 ### No Pulses Detected
@@ -195,11 +348,11 @@ Check your gas meter specification plate for the correct value.
 1. Verify wiring (D2 and GND)
 2. Check reed contact position near magnet
 3. Test reed contact manually with a magnet
-4. Check logs: `esphome logs gas-meter-wemos-en.yaml`
+4. Check logs: `esphome logs esphome/gas-meter-wemos.yaml`
 
 ### False Pulses
 
-Increase debounce filter:
+Increase debounce filter in `gas-meter/core/pulse-meter.yaml`:
 
 ```yaml
 internal_filter: 200ms  # Increase from default 100ms
@@ -208,22 +361,31 @@ internal_filter: 200ms  # Increase from default 100ms
 ### WiFi Connection Issues
 
 1. Verify `secrets.yaml` credentials
-2. Use fallback AP: "Gas Meter Fallback" / "Gaszaehler Fallback"
-3. Configure through captive portal
+2. Check WiFi signal strength (diagnostic sensor)
+3. Ensure 2.4 GHz WiFi (ESP8266 doesn't support 5 GHz)
 
-## Build and Flash
+## Simplified Architecture
 
-### First Flash (USB)
+This project intentionally excludes certain features for simplicity:
 
-```bash
-esphome run gas-meter-wemos-en.yaml
-```
+**Not Included:**
+- ❌ OTA updates - Flash via USB for security
+- ❌ MQTT - Use Home Assistant API instead
+- ❌ Web server - Configure via Home Assistant
+- ❌ Captive portal - No WiFi fallback AP
+- ❌ Time/NTP - Not needed for pulse counting
+- ❌ API encryption - Suitable for trusted networks
 
-### OTA Updates
+**Why Simplified?**
+- Faster compilation
+- Smaller firmware size
+- Easier to understand for beginners
+- Less attack surface
+- Fewer dependencies
 
-```bash
-esphome run gas-meter-wemos-en.yaml --device gas-meter.local
-```
+**Adding Features:**
+If you need OTA, MQTT, or other features, create additional package files
+in `common/core/` and include them in `gas-meter-wemos.yaml`.
 
 ## License
 
@@ -231,39 +393,44 @@ MIT License - See LICENSE file
 
 ## Project History
 
+### 2024-12-05: Remote Packages Support
+- Added `gas-meter-wemos-remote.yaml` for loading packages from GitHub
+- Updated README.md and README_de.md with Remote Packages documentation
+- Changed remote package ref from feature branch to `main`
+- Enables usage without cloning repository
+
+### 2024-12-04: Simplified Architecture
+- Removed OTA, MQTT, web server, captive portal, time/NTP
+- Consolidated to single configuration file
+- Simplified secrets (WiFi only)
+- Removed API encryption requirement
+- Moved connectivity packages (api, wifi) from connectivity/ to core/
+- Moved LED component from common/components/ to gas-meter/
+- Simplified directory structure (removed connectivity and components folders)
+- **Added aggregated package files** (`common/packages.yaml`, `gas-meter/packages.yaml`)
+- Main config now includes only 4 packages instead of 10+ individual files
+- Moved board configuration from common/packages.yaml to main device config
+- Split boot logic from esphome.yaml into gas-meter/core/boot.yaml
+
+### 2024-12-02: Package-Based Structure
+- Migrated from monolithic to modular package structure
+- Created granular packages for each component
+- Implemented localization via wrapper files
+- Added remote package support (later removed)
+
 ### Initial Setup
-
-1. Created ESPHome configuration for Wemos D1 Mini
-2. Configured reed contact on D2 (GPIO4)
-3. Implemented persistent pulse counter
-4. Added adjustable meter offset
-
-### German Localization
-
-1. Created German version with MQTT-compatible names
-2. Translated all sensor and entity names
-3. Used "ae", "oe", "ue" for umlauts
-
-### Documentation
-
-1. Created bilingual README (English/German)
-2. Added language switcher in both READMEs
-3. Fixed all markdownlint issues
-4. Created comprehensive project context
-
-### CI/CD
-
-1. Added GitHub Actions workflow
-2. Automated build validation
-3. Artifact creation and upload
+- Created ESPHome configuration for Wemos D1 Mini
+- Configured reed contact on D2 (GPIO4)
+- Implemented persistent pulse counter
+- Added adjustable meter offset
 
 ## Pin Change History
 
 **Original**: D3 (GPIO0)
 **Updated**: D2 (GPIO4)
 
-The pin was changed per user request. Both YAML files and documentation were
-updated to reflect this change.
+The pin was changed per user request. All configurations and documentation
+reflect this change.
 
 ## Important Implementation Details
 
@@ -273,103 +440,30 @@ The configuration uses `internal_filter_mode: PULSE` which counts complete
 pulse cycles (close + open = 1 pulse). Using `EDGE` would incorrectly count
 both close and open as separate pulses.
 
-### LED Feedback
-
-The internal LED (GPIO2) provides visual confirmation:
-
-- Turns ON when pulse detected
-- Stays ON for 3 seconds
-- Turns OFF automatically
-
-### Global Variables
-
-Two global variables ensure persistence:
-
-1. `total_pulses_global`: Integer pulse count
-2. `meter_offset`: Float meter offset in m³
-
-Both have `restore_value: true` to survive reboots.
-
 ### Reset Functionality
 
 The "Reset Pulses" button:
-
 1. Sets `total_pulses_global` to 0
 2. Calls `gas_pulse_meter.set_total_pulses(0)`
 3. Does NOT reset the meter offset
 
 This allows starting fresh measurements without losing calibration.
 
-## Multi-Language Support
-
-The repository supports both English and German:
-
-- **README.md**: English (default)
-- **README_de.md**: German
-- Both have language switcher at the top
-- GitHub displays English README by default
-
-## Build Status
-
-Build status is shown via GitHub Actions badge in both READMEs:
-
-```markdown
-![Build Status](https://github.com/legacycode/ESPHome-Gas-Meter/workflows/Build%20ESPHome%20firmware/badge.svg)
-```
-
-## Future Considerations
-
-### Potential Enhancements
-
-1. **Battery Backup**: Add RTC with battery for power-off resilience
-2. **Display**: Add small OLED for local reading
-3. **Multiple Meters**: Support for water/electricity meters
-4. **Advanced Analytics**: Local trend calculation
-5. **Notifications**: Alert on unusual consumption patterns
-
-### Known Limitations
-
-1. Requires stable WiFi connection
-2. Depends on Home Assistant for long-term storage
-3. No local display without modification
-4. Manual calibration required annually
-
 ## Safety and Compliance
 
 **Important**: This project involves:
-
 - Electrical components (low voltage, but still requires care)
 - Gas meter modifications (check local regulations)
 - Potential warranty implications
 
 Always:
-
 - Comply with local regulations
 - Consult with your energy provider if required
 - Test thoroughly before relying on readings
 - Keep manual meter readings for backup
 
-## Repository URLs
-
-The project is hosted at:
-
-- **HTTPS**: https://github.com/legacycode/ESPHome-Gas-Meter
-- **Git Clone**: https://github.com/legacycode/ESPHome-Gas-Meter.git
-
-All URLs have been updated in:
-- README.md (language badges, build badge, clone instructions)
-- README_de.md (language badges, build badge, clone instructions)
-
-## Contact and Support
-
-For issues or questions:
-
-- Open an issue on GitHub
-- Check existing issues first
-- Provide logs and configuration when reporting problems
-
 ---
 
-**Last Updated**: 2024-12-02
+**Last Updated**: 2024-12-04
 **Project Status**: Active
 **Maintenance**: Community-maintained

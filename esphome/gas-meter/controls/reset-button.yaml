@@ -1,0 +1,16 @@
+# ============================================================================
+# Reset Button
+# ============================================================================
+# Button to reset pulse counter to zero
+# Uses name substitution: name_reset_button
+
+button:
+  # Reset pulse counter - Sets measured consumption back to zero
+  - platform: template
+    id: reset_button
+    name: "${name_reset_button}"
+    icon: "mdi:restart"
+    on_press:
+      - lambda: |-
+          id(total_pulses_global) = 0;
+          id(gas_pulse_meter).set_total_pulses(0);

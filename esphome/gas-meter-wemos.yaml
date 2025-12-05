@@ -1,0 +1,50 @@
+# ============================================================================
+# Gas Meter - Wemos D1 Mini (ESP8266)
+# ============================================================================
+# Main device configuration for gas meter with reed contact
+# Board: Wemos D1 Mini (ESP8266)
+#
+# This configuration includes:
+# ✅ Full gas meter functionality (LED, button, offset, all sensors)
+# ✅ WiFi connection
+# ✅ Home Assistant API
+# ✅ Localization support (English/German)
+# ❌ OTA updates (use USB for flashing)
+# ❌ MQTT
+# ❌ Web server
+# ❌ Captive portal
+# ❌ Time/NTP
+# ❌ WiFi fallback AP
+# ❌ API encryption
+
+# ============================================================================
+# Substitutions - Configuration Variables
+# ============================================================================
+substitutions:
+  # Device Identity
+  devicename: "gas-meter"
+  friendly_name: "Gas Meter"
+
+  # Gas Meter Configuration
+  pulses_per_cubic_meter: "100"
+  initial_meter_offset: "0"
+
+  # WiFi Configuration (no secrets needed for minimal config)
+  wifi_ssid_sub: !secret wifi_ssid
+  wifi_password_sub: !secret wifi_password
+
+# ============================================================================
+# Packages - Modular Configuration
+# ============================================================================
+packages:
+  # Base Configuration (core, wifi, api)
+  common:            !include common/packages.yaml
+
+  # Board Configuration (device-specific)
+  board:             !include common/boards/esp8266-d1-mini.yaml
+
+  # Gas Meter Functionality (sensors, controls, LED)
+  gas_meter:         !include gas-meter/packages.yaml
+
+  # Localization (change to "de.yaml" for German)
+  translations:      !include localization/en.yaml

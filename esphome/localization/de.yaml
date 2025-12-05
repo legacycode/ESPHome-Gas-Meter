@@ -1,0 +1,7 @@
+# ============================================================================
+# German Localization Package
+# ============================================================================
+# Loads German translations for all entities and texts (MQTT-compatible)
+
+packages:
+  translations: !include de/translations.yaml

@@ -1,0 +1,54 @@
+# ============================================================================
+# Gas Meter - Wemos D1 Mini (ESP8266) - Remote Packages
+# ============================================================================
+# This configuration loads all packages from GitHub instead of local files
+# Perfect for using the configuration without cloning the repository
+
+# ============================================================================
+# Substitutions - Configuration Variables
+# ============================================================================
+substitutions:
+  # Device Identity
+  devicename: "gas-meter-remote"
+  friendly_name: "Gas Meter Remote"
+  device_comment: "Gas Meter Reader with Reed Contact"
+
+  # Gas Meter Configuration
+  pulses_per_cubic_meter: "100"
+  initial_meter_offset: "0"
+
+  # WiFi Configuration
+  wifi_ssid_sub: !secret wifi_ssid
+  wifi_password_sub: !secret wifi_password
+
+# ============================================================================
+# Remote Packages - Loaded from GitHub
+# ============================================================================
+packages:
+  # Base Configuration (core, wifi, api)
+  common:
+    url: https://github.com/legacycode/ESPHome-Gas-Meter
+    file: esphome/common/packages.yaml
+    ref: main
+    refresh: 1d
+
+  # Board Configuration (device-specific)
+  board:
+    url: https://github.com/legacycode/ESPHome-Gas-Meter
+    file: esphome/common/boards/esp8266-d1-mini.yaml
+    ref: main
+    refresh: 1d
+
+  # Gas Meter Functionality (sensors, controls, LED)
+  gas_meter:
+    url: https://github.com/legacycode/ESPHome-Gas-Meter
+    file: esphome/gas-meter/packages.yaml
+    ref: main
+    refresh: 1d
+
+  # Localization (change to "de.yaml" for German)
+  translations:
+    url: https://github.com/legacycode/ESPHome-Gas-Meter
+    file: esphome/localization/en.yaml
+    ref: main
+    refresh: 1d

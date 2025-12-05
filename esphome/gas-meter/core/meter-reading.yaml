@@ -1,0 +1,20 @@
+# ============================================================================
+# Meter Reading Template Sensor
+# ============================================================================
+# Combines measured consumption with offset for actual meter reading
+# Uses name substitution: name_meter_reading
+
+sensor:
+  # Actual Meter Reading - Combines measured consumption with offset
+  - platform: template
+    id: actual_meter_reading
+    name: "${name_meter_reading}"
+    unit_of_measurement: "m³"
+    accuracy_decimals: 2
+    icon: "mdi:counter"
+    state_class: total_increasing
+    device_class: gas
+    # Calculate: offset + measured consumption
+    lambda: |-
+      return id(meter_offset) + id(pulse_meter_total).state;
+    update_interval: 10s

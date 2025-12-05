@@ -1,0 +1,21 @@
+# ============================================================================
+# Board: Wemos D1 Mini (ESP8266)
+# ============================================================================
+# Hardware configuration for Wemos D1 Mini board
+# Includes pin definitions and logger settings
+
+substitutions:
+  # Internal LED pin (blue LED on D4)
+  pin_internal_led: "GPIO2"
+  # LED is inverted on this board
+  led_inverted: "true"
+  # Reed contact pin (D2)
+  pin_reed_contact: "GPIO4"
+
+esp8266:
+  board: d1_mini
+
+# Logger - Serial output for debugging
+logger:
+  baud_rate: 115200
+  level: DEBUG

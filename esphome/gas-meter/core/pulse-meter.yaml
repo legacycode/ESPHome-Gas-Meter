@@ -1,0 +1,80 @@
+# ============================================================================
+# Pulse Meter Sensor
+# ============================================================================
+# Counts pulses from reed contact and calculates flow rate
+# Uses substitutions: pin_reed_contact, pulses_per_cubic_meter
+# Uses name substitutions: name_flow_rate, name_total, name_total_pulses
+
+sensor:
+  # Pulse Meter - Counts pulses and calculates flow rate
+  - platform: pulse_meter
+    id: gas_pulse_meter
+    name: "${name_flow_rate}"
+
+    # Connect to the reed contact pin
+    pin:
+      number: ${pin_reed_contact}
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+
+    # Unit of measurement
+    unit_of_measurement: "m³/h"
+    accuracy_decimals: 2
+    icon: "mdi:fire"
+
+    # Timeout: if no pulse for 2 minutes, assume flow = 0
+    timeout: 2min
+
+    # Internal filter mode: PULSE counts complete pulse cycles (close + open = 1 pulse)
+    # EDGE would count close AND open as 2 separate pulses (incorrect)
+    internal_filter_mode: PULSE
+
+    # Internal filter: Ignore pulses closer than 100ms (debouncing)
+    internal_filter: 100ms
+
+    # Filters
+    filters:
+      # Each pulse represents 1/pulses_per_cubic_meter cubic meters
+      # Multiply by 60 to convert from m³/min to m³/h
+      - multiply: !lambda "return 60.0 / ${pulses_per_cubic_meter};"
+
+    # Visual feedback: LED flashes for 3 seconds on each pulse
+    on_raw_value:
+      then:
+        # Update global pulse counter for persistence
+        - lambda: |-
+            id(total_pulses_global) += 1;
+        # LED feedback
+        - light.turn_on: led
+        # LED stays on for 3 seconds
+        - delay: 3s
+        - light.turn_off: led
+
+    # Total counter - tracks total gas consumption
+    total:
+      id: pulse_meter_total
+      name: "${name_total}"
+      unit_of_measurement: "m³"
+      accuracy_decimals: 2
+      icon: "mdi:counter"
+      # State class tells Home Assistant this is a cumulative value
+      state_class: total_increasing
+      # Device class for gas consumption
+      device_class: gas
+      # Convert pulses to cubic meters
+      filters:
+        - multiply: !lambda "return 1.0 / ${pulses_per_cubic_meter};"
+
+  # Total Pulses - Raw pulse count (without conversion to m³)
+  - platform: copy
+    source_id: pulse_meter_total
+    name: "${name_total_pulses}"
+    id: total_pulses_sensor
+    unit_of_measurement: "pulses"
+    accuracy_decimals: 0
+    icon: "mdi:counter"
+    filters:
+      # Multiply back to get raw pulses
+      - multiply: ${pulses_per_cubic_meter}

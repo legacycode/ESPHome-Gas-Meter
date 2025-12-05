@@ -16,11 +16,11 @@ with a Wemos D1 Mini (ESP8266).
 - 🔄 Persistent pulse counter (survives reboots)
 - 📈 Accurate meter reading with adjustable offset
 - 🏠 Home Assistant Energy Dashboard compatible
-- 📡 MQTT support for additional integrations
 - 💾 Adjustable meter offset (for annual calibration)
 - 🔄 Reset button for pulse counter
-- 💡 Visual LED feedback on each pulse
-- 🌐 Web interface for configuration
+- 💡 Visual LED feedback on each pulse (3 seconds)
+- 📦 Modular package-based configuration
+- 🌐 Dual language support (English/German)
 
 ## Hardware Requirements
 
@@ -75,50 +75,114 @@ so no external resistor is needed.
 2. Create a `secrets.yaml` file from the template:
 
    ```bash
-   cp secrets.yaml.example secrets.yaml
+   cp esphome/secrets.yaml.example esphome/secrets.yaml
    ```
 
-   Then edit `secrets.yaml` with your credentials:
+   Then edit `esphome/secrets.yaml` with your WiFi credentials:
 
    ```yaml
    wifi_ssid: "YourWiFiSSID"
    wifi_password: "YourWiFiPassword"
-   ap_password: "FallbackAP"
-   encryption_key: "your-32-char-encryption-key"
-   ota_password: "YourOTAPassword"
    ```
 
-   Generate secure keys using:
-   ```bash
-   # For encryption_key (32 bytes base64)
-   openssl rand -base64 32
-
-   # For ota_password (hex string)
-   openssl rand -hex 16
-   ```
-
-3. Adjust the configuration in `gas-meter-wemos-en.yaml` or
-   `gas-meter-wemos-de.yaml`:
+3. Adjust the configuration in `esphome/gas-meter-wemos.yaml`:
 
    ```yaml
    substitutions:
+     devicename: "gas-meter"
+     friendly_name: "Gas Meter"
      pulses_per_cubic_meter: "100"  # Adjust for your meter
      initial_meter_offset: "0"       # Set to your current meter reading
    ```
 
+4. **(Optional)** Change localization to German:
+
+   Edit line 50 in `esphome/gas-meter-wemos.yaml`:
+   ```yaml
+   # Change from:
+   translations: !include localization/en.yaml
+
+   # To:
+   translations: !include localization/de.yaml
+   ```
+
 ### 3. Flash the Firmware
 
-**First time (via USB):**
+**Flash via USB:**
 
 ```bash
-esphome run gas-meter-wemos-en.yaml
+esphome run esphome/gas-meter-wemos.yaml
 ```
 
-**Over-the-air updates (after initial flash):**
+**Note:** This project uses USB flashing only. OTA updates are not included
+for simplicity and security.
 
-```bash
-esphome run gas-meter-wemos-en.yaml --device gas-meter.local
-```
+## Alternative: Using Remote Packages
+
+Instead of cloning the repository, you can use the **remote package
+configuration** that loads all files directly from GitHub. This is perfect
+if you don't want to maintain local copies of the configuration files.
+
+### Quick Setup with Remote Packages
+
+1. **Prerequisites:**
+   - Install [ESPHome](https://esphome.io/guides/getting_started_command_line.html)
+   - Have your WiFi credentials ready
+
+2. **Download only the remote config file:**
+
+   ```bash
+   curl -O https://raw.githubusercontent.com/legacycode/ESPHome-Gas-Meter/main/esphome/gas-meter-wemos-remote.yaml
+   ```
+
+3. **Create a secrets.yaml in the same directory:**
+
+   ```yaml
+   wifi_ssid: "YourWiFiSSID"
+   wifi_password: "YourWiFiPassword"
+   ```
+
+4. **Adjust configuration variables** in `gas-meter-wemos-remote.yaml`:
+
+   ```yaml
+   substitutions:
+     devicename: "gas-meter-remote"
+     friendly_name: "Gas Meter Remote"
+     pulses_per_cubic_meter: "100"  # Adjust for your meter
+     initial_meter_offset: "0"       # Set to your current meter reading
+   ```
+
+5. **Flash via USB:**
+
+   ```bash
+   esphome run gas-meter-wemos-remote.yaml
+   ```
+
+### How Remote Packages Work
+
+The remote configuration automatically downloads all necessary files from
+GitHub on first use:
+
+- **common/packages.yaml** - Core ESPHome components
+- **common/boards/esp8266-d1-mini.yaml** - Board configuration
+- **gas-meter/packages.yaml** - All gas meter functionality
+- **localization/en.yaml** - English translations
+
+Files are cached locally and refreshed every 24 hours (`refresh: 1d`).
+
+### Advantages of Remote Packages
+
+✅ **No repository cloning** - Just one config file needed
+✅ **Automatic updates** - Get latest changes from GitHub
+✅ **Minimal maintenance** - No local file management
+✅ **Same functionality** - 100% feature parity with local version
+
+### Switching to Local Configuration
+
+If you prefer local files for customization, simply:
+1. Clone the full repository
+2. Use `esphome/gas-meter-wemos.yaml` instead
+3. Modify any package files as needed
 
 ## Configuration Options
 
@@ -191,16 +255,32 @@ To calibrate with your energy provider's reading:
 - Current offset: 1234 m³
 - New offset: 1234 + 6 = **1240 m³**
 
-## MQTT Integration
+## Architecture
 
-The device publishes to MQTT topics under `esphome/gas-meter/`.
+This project uses a **modular package-based structure** for better
+maintainability:
 
-Disable Home Assistant MQTT Discovery if you're using the API:
-
-```yaml
-mqtt:
-  discovery: false  # Already enabled in config
 ```
+esphome/
+├── common/               # Base configuration
+│   ├── boards/          # Board-specific configs
+│   ├── core/            # Core ESPHome components
+│   └── packages.yaml    # Aggregates all common packages
+├── gas-meter/           # Gas meter functionality
+│   ├── controls/        # Reset button, offset number
+│   ├── core/            # Boot, globals, pulse meter logic
+│   ├── sensors/         # Diagnostic sensors
+│   ├── led-internal.yaml
+│   └── packages.yaml    # Aggregates all gas-meter packages
+├── localization/        # Language support (EN/DE)
+└── gas-meter-wemos.yaml # Main device configuration
+```
+
+The main configuration includes just 4 packages:
+- `common/packages.yaml` - Core components (esphome, wifi, api, preferences)
+- Board configuration (ESP8266 D1 Mini)
+- `gas-meter/packages.yaml` - All gas meter functionality
+- `localization/en.yaml` (or de.yaml) - Language translations
 
 ## Troubleshooting
 
@@ -209,44 +289,51 @@ mqtt:
 1. Check wiring connections (D2 and GND)
 2. Verify the reed contact is positioned correctly near the magnet
 3. Test the reed contact with a magnet manually
-4. Check the logs: `esphome logs gas-meter-wemos-en.yaml`
+4. Check the logs: `esphome logs esphome/gas-meter-wemos.yaml`
 
 ### Pulses Too Fast/Slow
 
-Adjust the internal filter to prevent false triggers:
+Adjust the internal filter in `esphome/gas-meter/core/pulse-meter.yaml`:
 
 ```yaml
-internal_filter: 100ms  # Increase if you get false pulses
+internal_filter: 200ms  # Increase from default 100ms if you get false pulses
 ```
 
 ### Device Not Connecting to WiFi
 
-1. Check `secrets.yaml` credentials
-2. Use the fallback AP: Connect to "Gas Meter Fallback"
-3. Configure WiFi through the captive portal
+1. Check `esphome/secrets.yaml` credentials
+2. Ensure you're using 2.4 GHz WiFi (ESP8266 doesn't support 5 GHz)
+3. Check WiFi signal strength via Home Assistant diagnostic sensors
 
-## Files
+**Note:** This configuration does not include a fallback WiFi AP. If WiFi
+connection fails, you'll need to reflash via USB with corrected credentials.
 
-- `gas-meter-wemos-en.yaml` - English configuration
-- `gas-meter-wemos-de.yaml` - German configuration (uses "ae", "oe", "ue"
-  for MQTT compatibility)
-- `secrets.yaml.example` - Template for WiFi and API credentials
-- `secrets.yaml` - Your WiFi and API credentials (not included in git,
-  create from template)
-- `.github/workflows/build.yml` - GitHub Actions workflow for automated
-  builds
+## What's NOT Included
+
+This is a **simplified configuration** focused on core functionality.
+The following features are intentionally excluded:
+
+- ❌ OTA updates (use USB for flashing)
+- ❌ MQTT (use Home Assistant API instead)
+- ❌ Web server (configure via Home Assistant)
+- ❌ Captive portal (no fallback WiFi AP)
+- ❌ Time/NTP (not needed for pulse counting)
+- ❌ API encryption (suitable for trusted home networks)
+
+**Why simplified?** Faster compilation, smaller firmware, easier to understand,
+and fewer dependencies.
+
+**Need these features?** You can add them by creating additional package files
+in `esphome/common/core/` and including them in `gas-meter-wemos.yaml`.
 
 ## Continuous Integration
 
 This project uses GitHub Actions to automatically build and validate the
 firmware on every push and pull request. The workflow:
 
-- ✅ Compiles both English and German YAML configurations
+- ✅ Compiles the YAML configuration
 - ✅ Validates the ESPHome configuration syntax
 - ✅ Ensures firmware builds successfully
-
-The workflow runs on the `main` branch and uses the `secrets.yaml.example`
-template for build validation.
 
 ## License
 

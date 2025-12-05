@@ -12,11 +12,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        config:
-          - gas-meter-wemos-en.yaml
-          - gas-meter-wemos-de.yaml
 
     steps:
       - name: Checkout repository
@@ -41,9 +36,14 @@ jobs:
 
       - name: Create secrets.yaml from template
         run: |
-          cp secrets.yaml.example secrets.yaml
-          sed -i 's/YOUR_32_BYTE_BASE64_KEY=/507p6qLb8\/L+lDfZb2HdvKzaDyAj28C\/Q0NMyffw3LQ=/g' secrets.yaml
+          cp esphome/secrets.yaml.example esphome/secrets.yaml
+          sed -i 's/YOUR_WIFI_SSID/TestWiFi/g' esphome/secrets.yaml
+          sed -i 's/YOUR_WIFI_PASSWORD/TestPassword123/g' esphome/secrets.yaml
 
-      - name: Build ESPHome firmware
+      - name: Build ESPHome firmware (local)
         run: |
-          esphome compile ${{ matrix.config }}
+          esphome compile esphome/gas-meter-wemos.yaml
+
+      - name: Build ESPHome firmware (remote)
+        run: |
+          esphome compile esphome/gas-meter-wemos-remote.yaml

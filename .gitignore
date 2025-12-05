@@ -1,8 +1,8 @@
 # ESPHome secrets - contains WiFi passwords and encryption keys
-secrets.yaml
+esphome/secrets.yaml
 
 # ESPHome build files
-.esphome/
+esphome/.esphome/
 
 # IDE files
 .vscode/

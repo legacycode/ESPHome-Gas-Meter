@@ -1,0 +1,7 @@
+# ============================================================================
+# English Localization Package
+# ============================================================================
+# Loads English translations for all entities and texts
+
+packages:
+  translations: !include en/translations.yaml

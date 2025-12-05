@@ -1,0 +1,18 @@
+# ============================================================================
+# Global Variables
+# ============================================================================
+# Persistent variables that survive reboots
+# Uses substitution: initial_meter_offset
+
+globals:
+  # Total pulse count - restored on boot
+  - id: total_pulses_global
+    type: int
+    restore_value: true
+    initial_value: '0'
+
+  # Meter reading offset in m³ (for starting at existing meter value)
+  - id: meter_offset
+    type: float
+    restore_value: true
+    initial_value: '${initial_meter_offset}'

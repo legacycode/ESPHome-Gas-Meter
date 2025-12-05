@@ -1,0 +1,12 @@
+# ============================================================================
+# Common Packages - Base Configuration
+# ============================================================================
+# This file aggregates all common/core packages for easier inclusion
+# Includes: core components (esphome, preferences, wifi, api)
+
+packages:
+  # Core Components
+  core_esphome:      !include core/esphome.yaml
+  core_preferences:  !include core/preferences.yaml
+  wifi:              !include core/wifi.yaml
+  api:               !include core/api.yaml

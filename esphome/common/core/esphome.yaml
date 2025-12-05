@@ -1,0 +1,11 @@
+# ============================================================================
+# ESPHome Core Configuration
+# ============================================================================
+# Defines the device name and friendly name
+# Uses substitutions that must be defined in the main device config
+
+esphome:
+  name: ${devicename}
+  friendly_name: ${friendly_name}
+  comment: ${device_comment}
+  name_add_mac_suffix: false

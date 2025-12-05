@@ -1,0 +1,7 @@
+# ============================================================================
+# Home Assistant API (No Encryption)
+# ============================================================================
+# Communication with Home Assistant without encryption
+# Suitable for testing or trusted networks
+
+api:

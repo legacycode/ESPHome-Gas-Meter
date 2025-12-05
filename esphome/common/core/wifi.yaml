@@ -1,0 +1,9 @@
+# ============================================================================
+# WiFi Configuration (No Fallback AP)
+# ============================================================================
+# WiFi connection without fallback Access Point
+# Uses substitutions: wifi_ssid_sub, wifi_password_sub
+
+wifi:
+  ssid: ${wifi_ssid_sub}
+  password: ${wifi_password_sub}

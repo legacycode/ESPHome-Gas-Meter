@@ -1,0 +1,23 @@
+# ============================================================================
+# Gas Meter Packages - Complete Gas Meter Functionality
+# ============================================================================
+# This file aggregates all gas-meter packages for easier inclusion
+# Includes: LED, sensors, controls, core logic
+
+packages:
+  # LED Component
+  led:               !include led-internal.yaml
+
+  # Core Gas Meter Logic
+  boot:              !include core/boot.yaml
+  globals:           !include core/globals.yaml
+  pulse_meter:       !include core/pulse-meter.yaml
+  meter_reading:     !include core/meter-reading.yaml
+
+  # Sensors
+  diagnostic:        !include sensors/diagnostic.yaml
+  status:            !include sensors/status.yaml
+
+  # Controls
+  reset:             !include controls/reset-button.yaml
+  offset:            !include controls/offset-number.yaml

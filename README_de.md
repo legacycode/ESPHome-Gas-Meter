@@ -16,11 +16,11 @@ Reed-Kontakt-Sensor und einem Wemos D1 Mini (ESP8266).
 - 🔄 Persistenter Impulszähler (überlebt Neustarts)
 - 📈 Präzise Zählerstandserfassung mit einstellbarem Offset
 - 🏠 Kompatibel mit Home Assistant Energie-Dashboard
-- 📡 MQTT-Unterstützung für zusätzliche Integrationen
 - 💾 Einstellbarer Zählerstand-Offset (für jährliche Kalibrierung)
 - 🔄 Reset-Button für Impulszähler
-- 💡 Visuelles LED-Feedback bei jedem Impuls
-- 🌐 Web-Interface zur Konfiguration
+- 💡 Visuelles LED-Feedback bei jedem Impuls (3 Sekunden)
+- 📦 Modulare paketbasierte Konfiguration
+- 🌐 Zweisprachige Unterstützung (Deutsch/Englisch)
 
 ## Hardware-Anforderungen
 
@@ -75,49 +75,114 @@ aktiviert, daher wird kein externer Widerstand benötigt.
 2. Eine `secrets.yaml` Datei aus der Vorlage erstellen:
 
    ```bash
-   cp secrets.yaml.example secrets.yaml
+   cp esphome/secrets.yaml.example esphome/secrets.yaml
    ```
 
-   Dann `secrets.yaml` mit Ihren Zugangsdaten bearbeiten:
+   Dann `esphome/secrets.yaml` mit Ihren WiFi-Zugangsdaten bearbeiten:
 
    ```yaml
    wifi_ssid: "IhrWiFiSSID"
    wifi_password: "IhrWiFiPasswort"
-   ap_password: "FallbackAP"
-   encryption_key: "ihr-32-zeichen-verschluesselungsschluessel"
-   ota_password: "IhrOTAPasswort"
    ```
 
-   Sichere Schlüssel generieren mit:
-   ```bash
-   # Für encryption_key (32 Bytes base64)
-   openssl rand -base64 32
-
-   # Für ota_password (Hex-String)
-   openssl rand -hex 16
-   ```
-
-3. Konfiguration in `gas-meter-wemos-de.yaml` anpassen:
+3. Konfiguration in `esphome/gas-meter-wemos.yaml` anpassen:
 
    ```yaml
    substitutions:
+     devicename: "gas-meter"
+     friendly_name: "Gas Meter"
      pulses_per_cubic_meter: "100"  # An Ihren Zähler anpassen
      initial_meter_offset: "0"       # Auf Ihren aktuellen Zählerstand setzen
    ```
 
+4. **(Optional)** Auf deutsche Lokalisierung umstellen:
+
+   Zeile 50 in `esphome/gas-meter-wemos.yaml` ändern:
+   ```yaml
+   # Ändern von:
+   translations: !include localization/en.yaml
+
+   # Nach:
+   translations: !include localization/de.yaml
+   ```
+
 ### 3. Firmware flashen
 
-**Erstmaliges Flashen (via USB):**
+**Flashen via USB:**
 
 ```bash
-esphome run gas-meter-wemos-de.yaml
+esphome run esphome/gas-meter-wemos.yaml
 ```
 
-**Over-the-Air-Updates (nach erstem Flash):**
+**Hinweis:** Dieses Projekt verwendet nur USB-Flashen. OTA-Updates sind
+aus Gründen der Einfachheit und Sicherheit nicht enthalten.
 
-```bash
-esphome run gas-meter-wemos-de.yaml --device gas-meter.local
-```
+## Alternative: Remote Packages verwenden
+
+Anstatt das Repository zu klonen, können Sie die **Remote Package
+Konfiguration** verwenden, die alle Dateien direkt von GitHub lädt. Dies ist
+perfekt, wenn Sie keine lokalen Kopien der Konfigurationsdateien pflegen möchten.
+
+### Schnelleinrichtung mit Remote Packages
+
+1. **Voraussetzungen:**
+   - [ESPHome](https://esphome.io/guides/getting_started_command_line.html) installieren
+   - WiFi-Zugangsdaten bereithalten
+
+2. **Nur die Remote-Config-Datei herunterladen:**
+
+   ```bash
+   curl -O https://raw.githubusercontent.com/legacycode/ESPHome-Gas-Meter/main/esphome/gas-meter-wemos-remote.yaml
+   ```
+
+3. **Eine secrets.yaml im selben Verzeichnis erstellen:**
+
+   ```yaml
+   wifi_ssid: "IhrWiFiSSID"
+   wifi_password: "IhrWiFiPasswort"
+   ```
+
+4. **Konfigurationsvariablen** in `gas-meter-wemos-remote.yaml` anpassen:
+
+   ```yaml
+   substitutions:
+     devicename: "gas-meter-remote"
+     friendly_name: "Gas Meter Remote"
+     pulses_per_cubic_meter: "100"  # An Ihren Zähler anpassen
+     initial_meter_offset: "0"       # Auf Ihren aktuellen Zählerstand setzen
+   ```
+
+5. **Flashen via USB:**
+
+   ```bash
+   esphome run gas-meter-wemos-remote.yaml
+   ```
+
+### Wie Remote Packages funktionieren
+
+Die Remote-Konfiguration lädt automatisch alle benötigten Dateien von
+GitHub beim ersten Start:
+
+- **common/packages.yaml** - Core ESPHome-Komponenten
+- **common/boards/esp8266-d1-mini.yaml** - Board-Konfiguration
+- **gas-meter/packages.yaml** - Alle Gaszähler-Funktionen
+- **localization/en.yaml** - Englische Übersetzungen
+
+Dateien werden lokal gecacht und alle 24 Stunden aktualisiert (`refresh: 1d`).
+
+### Vorteile von Remote Packages
+
+✅ **Kein Repository-Klonen** - Nur eine Config-Datei benötigt
+✅ **Automatische Updates** - Erhalten Sie die neuesten Änderungen von GitHub
+✅ **Minimale Wartung** - Keine lokale Dateiverwaltung
+✅ **Gleiche Funktionalität** - 100% Funktionsparität mit lokaler Version
+
+### Umstellung auf lokale Konfiguration
+
+Wenn Sie lokale Dateien für Anpassungen bevorzugen, einfach:
+1. Das vollständige Repository klonen
+2. `esphome/gas-meter-wemos.yaml` statt Remote-Datei verwenden
+3. Beliebige Paket-Dateien nach Bedarf modifizieren
 
 ## Konfigurationsoptionen
 
@@ -149,39 +214,40 @@ Sie können dies auch später über Home Assistant mit der Entität
 
 ### Verfügbare Entitäten
 
-Nach dem Hinzufügen des Geräts zu Home Assistant haben Sie Zugriff auf:
+Nach Hinzufügen des Geräts zu Home Assistant haben Sie Zugriff auf:
 
-| Entität                     | Typ           | Beschreibung                   |
-|-----------------------------|---------------|--------------------------------|
-| **Durchflussrate**          | Sensor        | Aktuelle Durchflussrate (m³/h) |
-| **Gesamt**                  | Sensor        | Verbrauch seit Reset (m³)      |
-| **Zaehlerstand**            | Sensor        | Zählerstand (Offset+Gesamt)    |
-| **Gesamtimpulse**           | Sensor        | Rohe Impulszahl                |
-| **Zaehlerstand-Offset**     | Number        | Offset zur Kalibrierung        |
-| **Impulse zuruecksetzen**   | Button        | Zähler zurücksetzen            |
-| **Status**                  | Binary Sensor | Gerätestatus                   |
-| **LED**                     | Light         | Status-LED steuern             |
-| **WiFi-Signal**             | Sensor        | WiFi-Signalstärke              |
-| **Betriebszeit**            | Sensor        | Gerätebetriebszeit             |
+| Entität             | Typ           | Beschreibung                             |
+|---------------------|---------------|------------------------------------------|
+| **Flow Rate**       | Sensor        | Aktueller Gasdurchfluss (m³/h)           |
+| **Total**           | Sensor        | Gemessener Verbrauch seit Reset (m³)     |
+| **Meter Reading**   | Sensor        | Tatsächlicher Zählerstand (Offset+Total) |
+| **Total Pulses**    | Sensor        | Rohe Impulszählung                       |
+| **Meter Offset**    | Number        | Einstellbarer Offset zur Kalibrierung    |
+| **Reset Pulses**    | Button        | Impulszähler auf Null zurücksetzen       |
+| **Status**          | Binary Sensor | Gerätestatus online/offline              |
+| **LED**             | Light         | Status-LED steuern                       |
+| **WiFi Signal**     | Sensor        | WiFi-Signalstärke                        |
+| **Uptime**          | Sensor        | Gerätebetriebszeit                       |
 
-### Energie-Dashboard Integration
+### Energie-Dashboard-Integration
 
 1. Gehen Sie zu **Einstellungen** → **Dashboards** → **Energie**
 2. Unter **Gasverbrauch**: **Gasquelle hinzufügen**
-3. Wählen Sie: **sensor.gaszaehler_zaehlerstand**
+3. Wählen Sie: **sensor.gas_meter_meter_reading**
+   (oder **sensor.gaszaehler_zaehlerstand** bei deutscher Lokalisierung)
 4. Bestätigen
 
-Das Energie-Dashboard erfasst automatisch Ihren täglichen, monatlichen und
-jährlichen Gasverbrauch.
+Das Energie-Dashboard verfolgt automatisch Ihren täglichen, monatlichen
+und jährlichen Gasverbrauch.
 
 ### Jährliche Kalibrierung
 
-Zum Abgleich mit der Ablesung Ihres Energieversorgers:
+Um mit der Ablesung Ihres Energieversorgers zu kalibrieren:
 
-1. Vergleichen Sie den **Zaehlerstand**-Sensor mit Ihrem physischen Zähler
+1. Vergleichen Sie den **Meter Reading** Sensor mit Ihrem physischen Zähler
 2. Berechnen Sie die Differenz: `tatsaechlicher_stand - sensor_stand`
-3. Passen Sie **Zaehlerstand-Offset** an, indem Sie die Differenz addieren
-4. Der **Zaehlerstand** entspricht nun Ihrem physischen Zähler
+3. Passen Sie **Meter Offset** an, indem Sie die Differenz addieren
+4. Der **Meter Reading** stimmt nun mit Ihrem physischen Zähler überein
 
 **Beispiel:**
 
@@ -191,61 +257,87 @@ Zum Abgleich mit der Ablesung Ihres Energieversorgers:
 - Aktueller Offset: 1234 m³
 - Neuer Offset: 1234 + 6 = **1240 m³**
 
-## MQTT Integration
+## Architektur
 
-Das Gerät publiziert auf MQTT-Topics unter `esphome/gas-meter/`.
+Dieses Projekt verwendet eine **modulare paketbasierte Struktur** für
+bessere Wartbarkeit:
 
-Home Assistant MQTT Discovery ist deaktiviert, wenn Sie die API verwenden:
-
-```yaml
-mqtt:
-  discovery: false  # Bereits in der Konfiguration aktiviert
+```
+esphome/
+├── common/               # Basiskonfiguration
+│   ├── boards/          # Board-spezifische Configs
+│   ├── core/            # Core ESPHome-Komponenten
+│   └── packages.yaml    # Aggregiert alle common-Pakete
+├── gas-meter/           # Gaszähler-Funktionalität
+│   ├── controls/        # Reset-Button, Offset-Nummer
+│   ├── core/            # Boot, Globals, Pulse Meter Logik
+│   ├── sensors/         # Diagnose-Sensoren
+│   ├── led-internal.yaml
+│   └── packages.yaml    # Aggregiert alle gas-meter-Pakete
+├── localization/        # Sprachunterstützung (EN/DE)
+└── gas-meter-wemos.yaml # Hauptgerätekonfiguration
 ```
 
-## Fehlersuche
+Die Hauptkonfiguration beinhaltet nur 4 Pakete:
+- `common/packages.yaml` - Core-Komponenten (esphome, wifi, api, preferences)
+- Board-Konfiguration (ESP8266 D1 Mini)
+- `gas-meter/packages.yaml` - Alle Gaszähler-Funktionen
+- `localization/en.yaml` (oder de.yaml) - Sprachübersetzungen
+
+## Fehlerbehebung
 
 ### Keine Impulse erkannt
 
-1. Verkabelung überprüfen (D2 und GND)
-2. Prüfen, ob der Reed-Kontakt korrekt in der Nähe des Magneten positioniert ist
+1. Verkabelung prüfen (D2 und GND)
+2. Position des Reed-Kontakts nahe dem Magneten überprüfen
 3. Reed-Kontakt manuell mit einem Magneten testen
-4. Logs überprüfen: `esphome logs gas-meter-wemos-de.yaml`
+4. Logs prüfen: `esphome logs esphome/gas-meter-wemos.yaml`
 
 ### Impulse zu schnell/langsam
 
-Internen Filter anpassen, um Fehlauslösungen zu verhindern:
+Interner Filter in `esphome/gas-meter/core/pulse-meter.yaml` anpassen:
 
 ```yaml
-internal_filter: 100ms  # Erhöhen bei Fehlimpulsen
+internal_filter: 200ms  # Von Standard 100ms erhöhen bei Fehlimpulsen
 ```
 
 ### Gerät verbindet sich nicht mit WiFi
 
-1. `secrets.yaml` Zugangsdaten überprüfen
-2. Fallback-AP verwenden: Mit "Gaszaehler Fallback" verbinden
-3. WiFi über das Captive Portal konfigurieren
+1. `esphome/secrets.yaml` Zugangsdaten prüfen
+2. Sicherstellen, dass 2,4 GHz WiFi verwendet wird (ESP8266 unterstützt kein 5 GHz)
+3. WiFi-Signalstärke über Home Assistant Diagnose-Sensoren prüfen
 
-## Dateien
+**Hinweis:** Diese Konfiguration enthält keinen Fallback-WiFi-AP. Bei
+fehlgeschlagener WiFi-Verbindung muss via USB mit korrigierten
+Zugangsdaten neu geflasht werden.
 
-- `gas-meter-wemos-en.yaml` - Englische Konfiguration
-- `gas-meter-wemos-de.yaml` - Deutsche Konfiguration (verwendet "ae",
-  "oe", "ue" für MQTT-Kompatibilität)
-- `secrets.yaml.example` - Vorlage für WiFi- und API-Zugangsdaten
-- `secrets.yaml` - Ihre WiFi- und API-Zugangsdaten (nicht in git enthalten,
-  aus Vorlage erstellen)
-- `.github/workflows/build.yml` - GitHub Actions Workflow
+## Was NICHT enthalten ist
+
+Dies ist eine **vereinfachte Konfiguration** fokussiert auf Kernfunktionalität.
+Die folgenden Features sind bewusst ausgeschlossen:
+
+- ❌ OTA-Updates (USB zum Flashen verwenden)
+- ❌ MQTT (stattdessen Home Assistant API verwenden)
+- ❌ Web-Server (über Home Assistant konfigurieren)
+- ❌ Captive Portal (kein Fallback-WiFi-AP)
+- ❌ Zeit/NTP (nicht nötig für Impulszählung)
+- ❌ API-Verschlüsselung (geeignet für vertrauenswürdige Heimnetzwerke)
+
+**Warum vereinfacht?** Schnellere Kompilierung, kleinere Firmware, einfacher
+zu verstehen und weniger Abhängigkeiten.
+
+**Diese Features benötigt?** Sie können sie durch Erstellen zusätzlicher
+Paket-Dateien in `esphome/common/core/` und deren Einbindung in
+`gas-meter-wemos.yaml` hinzufügen.
 
 ## Continuous Integration
 
-Dieses Projekt verwendet GitHub Actions, um die Firmware bei jedem Push und
-Pull Request automatisch zu bauen und zu validieren. Der Workflow:
+Dieses Projekt verwendet GitHub Actions zur automatischen Erstellung und
+Validierung der Firmware bei jedem Push und Pull Request. Der Workflow:
 
-- ✅ Kompiliert beide YAML-Konfigurationen (Englisch und Deutsch)
+- ✅ Kompiliert die YAML-Konfiguration
 - ✅ Validiert die ESPHome-Konfigurationssyntax
-- ✅ Stellt sicher, dass die Firmware erfolgreich kompiliert
-
-Der Workflow läuft auf dem `main`-Branch und verwendet die
-`secrets.yaml.example` Vorlage zur Build-Validierung.
+- ✅ Stellt sicher, dass die Firmware erfolgreich erstellt wird
 
 ## Lizenz
 
@@ -254,7 +346,7 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe
 
 ## Mitwirken
 
-Beiträge sind willkommen! Bitte öffnen Sie gerne einen Pull Request.
+Beiträge sind willkommen! Bitte reichen Sie gerne einen Pull Request ein.
 
 ## Danksagungen
 
@@ -263,11 +355,11 @@ Beiträge sind willkommen! Bitte öffnen Sie gerne einen Pull Request.
 
 ## Support
 
-Wenn Sie auf Probleme stoßen oder Fragen haben, öffnen Sie bitte ein Issue auf GitHub.
+Bei Problemen oder Fragen öffnen Sie bitte ein Issue auf GitHub.
 
 ---
 
-**Haftungsausschluss:** Dieses Projekt beinhaltet elektrische Komponenten und
-Modifikationen am Gaszähler. Stellen Sie sicher, dass Sie lokale Vorschriften
-und Sicherheitsstandards einhalten. Die Autoren sind nicht verantwortlich für
-Schäden oder Verletzungen, die aus der Nutzung dieses Projekts resultieren.
+**Haftungsausschluss:** Dieses Projekt beinhaltet elektrische Komponenten
+und Gaszähler-Modifikationen. Stellen Sie sicher, dass Sie lokale Vorschriften
+und Sicherheitsstandards einhalten. Die Autoren übernehmen keine Verantwortung
+für Schäden oder Verletzungen, die aus der Nutzung dieses Projekts resultieren.

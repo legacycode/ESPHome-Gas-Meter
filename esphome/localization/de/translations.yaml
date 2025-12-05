@@ -1,0 +1,20 @@
+# ============================================================================
+# German Translations (MQTT-compatible)
+# ============================================================================
+# Entity names and text strings for German localization (ae, oe, ue)
+
+substitutions:
+  # Device Description
+  device_comment: "Gaszaehler-Ausleser mit Reed-Kontakt"
+
+  # Entity Names
+  name_led: "${friendly_name} LED"
+  name_status: "${friendly_name} Status"
+  name_flow_rate: "${friendly_name} Durchflussrate"
+  name_total: "${friendly_name} Gesamt"
+  name_total_pulses: "${friendly_name} Gesamtimpulse"
+  name_meter_reading: "${friendly_name} Zaehlerstand"
+  name_wifi_signal: "${friendly_name} WiFi-Signal"
+  name_uptime: "${friendly_name} Betriebszeit"
+  name_reset_button: "${friendly_name} Impulse zuruecksetzen"
+  name_meter_offset: "${friendly_name} Zaehlerstand-Offset"

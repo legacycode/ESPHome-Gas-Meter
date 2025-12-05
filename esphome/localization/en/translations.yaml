@@ -1,0 +1,20 @@
+# ============================================================================
+# English Translations
+# ============================================================================
+# Entity names and text strings for English localization
+
+substitutions:
+  # Device Description
+  device_comment: "Gas Meter Reader with Reed Contact"
+
+  # Entity Names
+  name_led: "${friendly_name} LED"
+  name_status: "${friendly_name} Status"
+  name_flow_rate: "${friendly_name} Flow Rate"
+  name_total: "${friendly_name} Total"
+  name_total_pulses: "${friendly_name} Total Pulses"
+  name_meter_reading: "${friendly_name} Meter Reading"
+  name_wifi_signal: "${friendly_name} WiFi Signal"
+  name_uptime: "${friendly_name} Uptime"
+  name_reset_button: "${friendly_name} Reset Pulses"
+  name_meter_offset: "${friendly_name} Meter Offset"

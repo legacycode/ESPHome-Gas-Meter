@@ -1,0 +1,7 @@
+# ============================================================================
+# Preferences - Flash Storage
+# ============================================================================
+# Ensures sensor values are saved and restored after reboot
+
+preferences:
+  flash_write_interval: 1min

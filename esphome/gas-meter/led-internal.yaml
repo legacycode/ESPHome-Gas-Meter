@@ -1,0 +1,19 @@
+# ============================================================================
+# Internal LED Component
+# ============================================================================
+# Board-agnostic internal LED configuration
+# Uses substitutions from board config: pin_internal_led, led_inverted
+# Uses substitution from localization: name_led
+
+output:
+  - platform: gpio
+    pin: ${pin_internal_led}
+    inverted: ${led_inverted}
+    id: internal_led
+
+light:
+  - platform: binary
+    output: internal_led
+    id: led
+    name: "${name_led}"
+    restore_mode: RESTORE_DEFAULT_OFF
