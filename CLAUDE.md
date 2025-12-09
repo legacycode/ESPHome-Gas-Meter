@@ -125,7 +125,7 @@ substitutions:
   initial_meter_offset: "0"
 
 packages:
-  common:
+  gas_meter:
     url: https://github.com/legacycode/ESPHome-Gas-Meter
     files: [
       esphome/common/packages.yaml,

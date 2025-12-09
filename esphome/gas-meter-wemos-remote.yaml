@@ -21,8 +21,8 @@ substitutions:
 # Remote Packages - Loaded from GitHub
 # ============================================================================
 packages:
-  # Base Configuration (core, wifi, api)
-  common:
+  # Gas Meter Package (includes common, board, gas-meter, localization)
+  gas_meter:
     url: https://github.com/legacycode/ESPHome-Gas-Meter
     files: [
       esphome/common/packages.yaml,
