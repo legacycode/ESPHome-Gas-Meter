@@ -29,10 +29,6 @@ substitutions:
   pulses_per_cubic_meter: "100"
   initial_meter_offset: "0"
 
-  # WiFi Configuration (no secrets needed for minimal config)
-  wifi_ssid_sub: !secret wifi_ssid
-  wifi_password_sub: !secret wifi_password
-
 # ============================================================================
 # Packages - Modular Configuration
 # ============================================================================

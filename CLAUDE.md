@@ -123,31 +123,16 @@ substitutions:
   device_comment: "Gas Meter Reader with Reed Contact"
   pulses_per_cubic_meter: "100"
   initial_meter_offset: "0"
-  wifi_ssid_sub: !secret wifi_ssid
-  wifi_password_sub: !secret wifi_password
 
 packages:
   common:
     url: https://github.com/legacycode/ESPHome-Gas-Meter
-    file: esphome/common/packages.yaml
-    ref: main
-    refresh: 1d
-
-  board:
-    url: https://github.com/legacycode/ESPHome-Gas-Meter
-    file: esphome/common/boards/esp8266-d1-mini.yaml
-    ref: main
-    refresh: 1d
-
-  gas_meter:
-    url: https://github.com/legacycode/ESPHome-Gas-Meter
-    file: esphome/gas-meter/packages.yaml
-    ref: main
-    refresh: 1d
-
-  translations:
-    url: https://github.com/legacycode/ESPHome-Gas-Meter
-    file: esphome/localization/en.yaml
+    files: [
+      esphome/common/packages.yaml,
+      esphome/common/boards/esp8266-d1-mini.yaml,
+      esphome/gas-meter/packages.yaml,
+      esphome/localization/en.yaml
+    ]
     ref: main
     refresh: 1d
 ```
@@ -161,9 +146,10 @@ packages:
 
 **Key Requirements:**
 - All substitutions must be defined BEFORE the packages section
-- Each package needs: `url`, `file`, `ref`, `refresh`
+- Uses `files:` array to load multiple files from the same repository
 - Files are referenced relative to repository root
-- Branch can be `main` or any feature branch (e.g., `feature/simplify-to-minimal`)
+- WiFi credentials are loaded from `secrets.yaml` (wifi_ssid, wifi_password)
+- No wifi_ssid_sub/wifi_password_sub substitutions needed
 
 **Usage:**
 1. Download `gas-meter-wemos-remote.yaml` from repository

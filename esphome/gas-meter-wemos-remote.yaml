@@ -17,10 +17,6 @@ substitutions:
   pulses_per_cubic_meter: "100"
   initial_meter_offset: "0"
 
-  # WiFi Configuration
-  wifi_ssid_sub: !secret wifi_ssid
-  wifi_password_sub: !secret wifi_password
-
 # ============================================================================
 # Remote Packages - Loaded from GitHub
 # ============================================================================
@@ -28,27 +24,11 @@ packages:
   # Base Configuration (core, wifi, api)
   common:
     url: https://github.com/legacycode/ESPHome-Gas-Meter
-    file: esphome/common/packages.yaml
-    ref: main
-    refresh: 1d
-
-  # Board Configuration (device-specific)
-  board:
-    url: https://github.com/legacycode/ESPHome-Gas-Meter
-    file: esphome/common/boards/esp8266-d1-mini.yaml
-    ref: main
-    refresh: 1d
-
-  # Gas Meter Functionality (sensors, controls, LED)
-  gas_meter:
-    url: https://github.com/legacycode/ESPHome-Gas-Meter
-    file: esphome/gas-meter/packages.yaml
-    ref: main
-    refresh: 1d
-
-  # Localization (change to "de.yaml" for German)
-  translations:
-    url: https://github.com/legacycode/ESPHome-Gas-Meter
-    file: esphome/localization/en.yaml
+    files: [
+      esphome/common/packages.yaml,
+      esphome/common/boards/esp8266-d1-mini.yaml,
+      esphome/gas-meter/packages.yaml,
+      esphome/localization/en.yaml
+      ]
     ref: main
     refresh: 1d
