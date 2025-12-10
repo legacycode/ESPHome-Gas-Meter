@@ -224,10 +224,7 @@ Nach Hinzufügen des Geräts zu Home Assistant haben Sie Zugriff auf:
 | **Total Pulses**    | Sensor        | Rohe Impulszählung                       |
 | **Meter Offset**    | Number        | Einstellbarer Offset zur Kalibrierung    |
 | **Reset Pulses**    | Button        | Impulszähler auf Null zurücksetzen       |
-| **Status**          | Binary Sensor | Gerätestatus online/offline              |
 | **LED**             | Light         | Status-LED steuern                       |
-| **WiFi Signal**     | Sensor        | WiFi-Signalstärke                        |
-| **Uptime**          | Sensor        | Gerätebetriebszeit                       |
 
 ### Energie-Dashboard-Integration
 
@@ -271,7 +268,6 @@ esphome/
 ├── gas-meter/           # Gaszähler-Funktionalität
 │   ├── controls/        # Reset-Button, Offset-Nummer
 │   ├── core/            # Boot, Globals, Pulse Meter Logik
-│   ├── sensors/         # Diagnose-Sensoren
 │   ├── led-internal.yaml
 │   └── packages.yaml    # Aggregiert alle gas-meter-Pakete
 ├── localization/        # Sprachunterstützung (EN/DE)
@@ -305,7 +301,6 @@ internal_filter: 200ms  # Von Standard 100ms erhöhen bei Fehlimpulsen
 
 1. `esphome/secrets.yaml` Zugangsdaten prüfen
 2. Sicherstellen, dass 2,4 GHz WiFi verwendet wird (ESP8266 unterstützt kein 5 GHz)
-3. WiFi-Signalstärke über Home Assistant Diagnose-Sensoren prüfen
 
 **Hinweis:** Diese Konfiguration enthält keinen Fallback-WiFi-AP. Bei
 fehlgeschlagener WiFi-Verbindung muss via USB mit korrigierten

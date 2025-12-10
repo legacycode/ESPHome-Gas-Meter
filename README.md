@@ -223,10 +223,7 @@ After adding the device to Home Assistant, you'll have access to:
 | **Total Pulses**   | Sensor        | Raw pulse count                        |
 | **Meter Offset**   | Number        | Adjustable offset for calibration      |
 | **Reset Pulses**   | Button        | Reset the pulse counter to zero        |
-| **Status**         | Binary Sensor | Device online/offline status           |
 | **LED**            | Light         | Control the status LED                 |
-| **WiFi Signal**    | Sensor        | WiFi signal strength                   |
-| **Uptime**         | Sensor        | Device uptime                          |
 
 ### Energy Dashboard Integration
 
@@ -269,7 +266,6 @@ esphome/
 ├── gas-meter/           # Gas meter functionality
 │   ├── controls/        # Reset button, offset number
 │   ├── core/            # Boot, globals, pulse meter logic
-│   ├── sensors/         # Diagnostic sensors
 │   ├── led-internal.yaml
 │   └── packages.yaml    # Aggregates all gas-meter packages
 ├── localization/        # Language support (EN/DE)
@@ -303,7 +299,6 @@ internal_filter: 200ms  # Increase from default 100ms if you get false pulses
 
 1. Check `esphome/secrets.yaml` credentials
 2. Ensure you're using 2.4 GHz WiFi (ESP8266 doesn't support 5 GHz)
-3. Check WiFi signal strength via Home Assistant diagnostic sensors
 
 **Note:** This configuration does not include a fallback WiFi AP. If WiFi
 connection fails, you'll need to reflash via USB with corrected credentials.

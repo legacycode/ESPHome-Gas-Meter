@@ -58,9 +58,6 @@ esphome/
 │   │   ├── globals.yaml                # Global variables
 │   │   ├── meter-reading.yaml         # Meter reading with offset
 │   │   └── pulse-meter.yaml           # Pulse meter sensor
-│   ├── sensors/
-│   │   ├── diagnostic.yaml             # WiFi signal, uptime
-│   │   └── status.yaml                 # Binary status sensor
 │   ├── led-internal.yaml               # Internal LED for pulse feedback
 │   └── packages.yaml                   # ⭐ Aggregates all gas-meter packages
 ├── localization/
@@ -176,7 +173,6 @@ The configuration uses a **two-level package hierarchy** for maximum simplicity:
 2. **`gas-meter/packages.yaml`** - All gas meter components:
    - LED: `led-internal.yaml`
    - Core: `globals.yaml`, `pulse-meter.yaml`, `meter-reading.yaml`
-   - Sensors: `diagnostic.yaml`, `status.yaml`
    - Controls: `reset-button.yaml`, `offset-number.yaml`
 
 3. **`localization/en.yaml` or `de.yaml`** - Language translations
@@ -196,18 +192,11 @@ Two global variables ensure persistence:
 
 ### Sensors
 
-**Primary Sensors:**
+**Sensors:**
 - **Flow Rate** (`pulse_meter`): Current gas flow in m³/h
 - **Total** (`pulse_meter.total`): Total consumption in m³
 - **Meter Reading** (`template`): Total + Offset for Energy Dashboard
-
-**Diagnostic Sensors:**
 - **Total Pulses**: Raw pulse count
-- **WiFi Signal**: Signal strength in dB
-- **Uptime**: Device uptime in seconds
-
-**Status Sensors:**
-- **Status**: Online/offline binary sensor
 
 ### Controls
 
