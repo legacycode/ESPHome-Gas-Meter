@@ -1,12 +1,12 @@
 # ESPHome Gaszähler-Ausleser
 
-[![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/legacycode/ESPHome-Gas-Meter/blob/main/README.md)
-[![de](https://img.shields.io/badge/lang-de-blue.svg)](https://github.com/legacycode/ESPHome-Gas-Meter/blob/main/README_de.md)
+[![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/legacycode-esphome/ESPHome-Gas-Meter/blob/main/README.md)
+[![de](https://img.shields.io/badge/lang-de-blue.svg)](https://github.com/legacycode-esphome/ESPHome-Gas-Meter/blob/main/README_de.md)
 
 ESPHome-Konfiguration zum Auslesen eines Gaszählers mit einem
 Reed-Kontakt-Sensor und einem Wemos D1 Mini (ESP8266).
 
-[![Build ESPHome firmware](https://github.com/legacycode/ESPHome-Gas-Meter/actions/workflows/build.yml/badge.svg)](https://github.com/legacycode/ESPHome-Gas-Meter/actions/workflows/build.yml)
+[![Build ESPHome firmware](https://github.com/legacycode-esphome/ESPHome-Gas-Meter/actions/workflows/build.yml/badge.svg)](https://github.com/legacycode-esphome/ESPHome-Gas-Meter/actions/workflows/build.yml)
 ![Gas Meter](https://img.shields.io/badge/ESPHome-Kompatibel-blue)
 ![License](https://img.shields.io/badge/Lizenz-MIT-green)
 
@@ -68,7 +68,7 @@ aktiviert, daher wird kein externer Widerstand benötigt.
 1. Repository klonen:
 
    ```bash
-   git clone https://github.com/legacycode/ESPHome-Gas-Meter.git
+   git clone https://github.com/legacycode-esphome/ESPHome-Gas-Meter.git
    cd ESPHome-Gas-Meter
    ```
 
@@ -132,7 +132,7 @@ perfekt, wenn Sie keine lokalen Kopien der Konfigurationsdateien pflegen möchte
 2. **Nur die Remote-Config-Datei herunterladen:**
 
    ```bash
-   curl -O https://raw.githubusercontent.com/legacycode/ESPHome-Gas-Meter/main/esphome/gas-meter-wemos-remote.yaml
+   curl -O https://raw.githubusercontent.com/legacycode-esphome/ESPHome-Gas-Meter/main/esphome/gas-meter-wemos-remote.yaml
    ```
 
 3. **Eine secrets.yaml im selben Verzeichnis erstellen:**

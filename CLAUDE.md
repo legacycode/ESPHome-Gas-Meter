@@ -123,7 +123,7 @@ substitutions:
 
 packages:
   gas_meter:
-    url: https://github.com/legacycode/ESPHome-Gas-Meter
+    url: https://github.com/legacycode-esphome/ESPHome-Gas-Meter.git
     files: [
       esphome/common/packages.yaml,
       esphome/common/boards/esp8266-d1-mini.yaml,

@@ -1,12 +1,12 @@
 # ESPHome Gas Meter Reader
 
-[![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/legacycode/ESPHome-Gas-Meter/blob/main/README.md)
-[![de](https://img.shields.io/badge/lang-de-blue.svg)](https://github.com/legacycode/ESPHome-Gas-Meter/blob/main/README_de.md)
+[![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/legacycode-esphome/ESPHome-Gas-Meter/blob/main/README.md)
+[![de](https://img.shields.io/badge/lang-de-blue.svg)](https://github.com/legacycode-esphome/ESPHome-Gas-Meter/blob/main/README_de.md)
 
 ESPHome configuration for reading a gas meter using a reed contact sensor
 with a Wemos D1 Mini (ESP8266).
 
-[![Build ESPHome firmware](https://github.com/legacycode/ESPHome-Gas-Meter/actions/workflows/build.yml/badge.svg)](https://github.com/legacycode/ESPHome-Gas-Meter/actions/workflows/build.yml)
+[![Build ESPHome firmware](https://github.com/legacycode-esphome/ESPHome-Gas-Meter/actions/workflows/build.yml/badge.svg)](https://github.com/legacycode-esphome/ESPHome-Gas-Meter/actions/workflows/build.yml)
 ![Gas Meter](https://img.shields.io/badge/ESPHome-Compatible-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -68,7 +68,7 @@ so no external resistor is needed.
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/legacycode/ESPHome-Gas-Meter.git
+   git clone https://github.com/legacycode-esphome/ESPHome-Gas-Meter.git
    cd ESPHome-Gas-Meter
    ```
 
@@ -132,7 +132,7 @@ if you don't want to maintain local copies of the configuration files.
 2. **Download only the remote config file:**
 
    ```bash
-   curl -O https://raw.githubusercontent.com/legacycode/ESPHome-Gas-Meter/main/esphome/gas-meter-wemos-remote.yaml
+   curl -O https://raw.githubusercontent.com/legacycode-esphome/ESPHome-Gas-Meter/main/esphome/gas-meter-wemos-remote.yaml
    ```
 
 3. **Create a secrets.yaml in the same directory:**
